@@ -1,6 +1,9 @@
+// ohio sigma rizzler things
 #include "VivifyRuntime.hpp"
 #include "main.hpp"
 #include "VivifyHandlers.hpp"
+#include <iostream>
+#include <stdexcept>
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
@@ -767,7 +770,7 @@ private:
         continue;
       }
       for (auto const& track : prefab.tracks) {
-        track.UnregisterGameObject(prefab.gameObject.ptr());
+        if (track) track.UnregisterGameObject(prefab.gameObject.ptr());
       }
       if (destroyed.emplace(prefab.gameObject.ptr()).second) {
         if (UnityEngine::Object::op_Implicit_bool(prefab.gameObject.ptr())) {
@@ -792,7 +795,7 @@ private:
     _savedGlobalKeywords.clear();
     _assets.clear();
     _assetPaths.clear();
-    for (auto const& vp : _videoPlayers) {
+    for (auto& vp : _videoPlayers) {
       if (vp && UnityEngine::Object::op_Implicit_bool(vp)) {
         vp->Stop();
       }
