@@ -16,7 +16,6 @@
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
-#include "SomeHeader.h"
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
 #include "GlobalNamespace/BeatmapCallbacksController.hpp"
 #include "GlobalNamespace/BpmController.hpp"
