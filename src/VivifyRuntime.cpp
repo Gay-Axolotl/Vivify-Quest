@@ -751,9 +751,17 @@ private:
   }
   void ResetRuntime() {
     if (_isResetting) return;
+    if (_currentBeatmapData == nullptr && _mainBundle == nullptr && _assets.empty() && _livePrefabs.empty()) return;
     _isResetting = true;
+
+    // Null state early to stop updates
+    _currentBeatmapData = nullptr;
+    _currentRawBeatmapData = nullptr;
+    _beatmapAD = nullptr;
+    _audioTimeSyncController = nullptr;
+
     RestoreGlobalProperties();
-    std::unordered_set<UnityEngine::GameObject*> destroyed;
+    std::unordered_set<void*> destroyed;
     for (auto& [id, prefab] : _livePrefabs) {
       if (prefab.gameObject == nullptr) {
         continue;
@@ -784,33 +792,27 @@ private:
     _savedGlobalKeywords.clear();
     _assets.clear();
     _assetPaths.clear();
+    for (auto const& vp : _videoPlayers) {
+      if (vp && UnityEngine::Object::op_Implicit_bool(vp)) {
+        vp->Stop();
+      }
+    }
     _videoPlayers.clear();
     for (auto& [name, dt] : _declaredTextures) {
-      if (dt.texture != nullptr) {
-        if (UnityEngine::Object::op_Implicit_bool(dt.texture)) {
-          dt.texture->Release();
+      if (dt.texture != nullptr && UnityEngine::Object::op_Implicit_bool(dt.texture)) {
           UnityEngine::Object::Destroy(dt.texture);
-        }
       }
     }
     _declaredTextures.clear();
     for (auto& [name, cam] : _secondaryCameras) {
-      if (cam.colorRT != nullptr) {
-        if (UnityEngine::Object::op_Implicit_bool(cam.colorRT)) {
-          cam.colorRT->Release();
+      if (cam.colorRT != nullptr && UnityEngine::Object::op_Implicit_bool(cam.colorRT)) {
           UnityEngine::Object::Destroy(cam.colorRT);
-        }
       }
-      if (cam.depthRT != nullptr) {
-        if (UnityEngine::Object::op_Implicit_bool(cam.depthRT)) {
-          cam.depthRT->Release();
+      if (cam.depthRT != nullptr && UnityEngine::Object::op_Implicit_bool(cam.depthRT)) {
           UnityEngine::Object::Destroy(cam.depthRT);
-        }
       }
-      if (cam.camera != nullptr) {
-        if (UnityEngine::Object::op_Implicit_bool(cam.camera)) {
+      if (cam.camera != nullptr && UnityEngine::Object::op_Implicit_bool(cam.camera)) {
           UnityEngine::Object::Destroy(cam.camera->get_gameObject());
-        }
       }
     }
     _secondaryCameras.clear();
@@ -821,14 +823,10 @@ private:
     _savedRenderSettings.clear();
     _assignedPrefabs.clear();
     _cameraProperties.clear();
-    if (_mainBundle != nullptr) {
+    if (_mainBundle != nullptr && UnityEngine::Object::op_Implicit_bool(_mainBundle)) {
       _mainBundle->Unload(false);
       _mainBundle = nullptr;
     }
-    _currentBeatmapData = nullptr;
-    _currentRawBeatmapData = nullptr;
-    _beatmapAD = nullptr;
-    _audioTimeSyncController = nullptr;
     _unsupportedEventWarnings.clear();
     _isResetting = false;
   }
@@ -1608,7 +1606,10 @@ private:
   void RestoreGlobalProperties() {
     for (auto const& [propertyId, value] : _savedGlobalProperties) {
       if (std::holds_alternative<UnityEngine::Texture*>(value)) {
-        UnityEngine::Shader::SetGlobalTexture(propertyId, std::get<UnityEngine::Texture*>(value));
+        auto* tex = std::get<UnityEngine::Texture*>(value);
+        if (tex == nullptr || UnityEngine::Object::op_Implicit_bool(tex)) {
+          UnityEngine::Shader::SetGlobalTexture(propertyId, tex);
+        }
       } else if (std::holds_alternative<UnityEngine::Color>(value)) {
         UnityEngine::Shader::SetGlobalColor(propertyId, std::get<UnityEngine::Color>(value));
       } else if (std::holds_alternative<float>(value)) {
