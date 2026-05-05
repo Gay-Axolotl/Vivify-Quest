@@ -14,6 +14,9 @@
 #include <variant>
 #include <vector>
 #include <filesystem>
+#include <iostream>
+#include <stdexcept>
+#include "SomeHeader.h"
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
 #include "GlobalNamespace/BeatmapCallbacksController.hpp"
 #include "GlobalNamespace/BpmController.hpp"
@@ -1780,5 +1783,47 @@ void RuntimeBehaviour::OnDestroy() {
 }
 void CameraApplier::OnRenderImage(UnityEngine::RenderTexture* src, UnityEngine::RenderTexture* dest) {
   Runtime::Instance().ApplyBlits(src, dest);
+}
+
+void FindAssignedPrefab(void* prefab)
+{
+    try {
+        auto assignedPrefab = try_cast<PrefabType>(prefab);
+        // things
+    } catch (const std::exception& e) {
+        std::cerr << "Error casting prefab: " << e.what() << std::endl;
+    }
+}
+
+void ReplaceNoteVisuals(NoteTransform* noteTransform)
+{
+    if (noteTransform == nullptr) {
+        std::cerr << "Error: noteTransform is null." << std::endl;
+        return;
+    }
+    
+    for (auto& renderer : noteTransform->renderers) {
+        if (renderer == nullptr) {
+            std::cerr << "Warning: renderer is null, skipping..." << std::endl;
+            continue;
+        }
+        // i hate crashes
+    }
+}
+
+void ReplaceSaberVisuals(SaberType* saber)
+{
+    if (saber == nullptr) {
+        std::cerr << "Error: saber is null." << std::endl;
+        return;
+    }
+    
+    for (auto& element : saber->elements) {
+        if (element == nullptr) {
+            std::cerr << "Warning: element is null, skipping..." << std::endl;
+            continue;
+        }
+        // mango mango mango mustarrdd
+    }
 }
 }
