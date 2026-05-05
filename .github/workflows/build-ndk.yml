@@ -88,6 +88,7 @@ jobs:
             extern/includes/bs-cordl/include/GlobalNamespace/zzzz__NoteData_def.hpp
             extern/includes/bs-cordl/include/GlobalNamespace/zzzz__Saber_def.hpp
             extern/includes/bs-cordl/include/GlobalNamespace/zzzz__NoteMovement_def.hpp
+            extern/includes/bs-cordl/include/GlobalNamespace/zzzz__BurstSliderGameNoteController_def.hpp
           if-no-files-found: warn
 
       - name: Build & Create Qmod
