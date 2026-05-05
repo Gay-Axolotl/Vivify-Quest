@@ -1661,8 +1661,7 @@ private:
   public:
   AssignedPrefabInfo* FindAssignedPrefab(std::string_view objectType, GlobalNamespace::NoteData* noteData) {
     if (noteData == nullptr) return nullptr;
-    auto* customNoteData = il2cpp_utils::try_cast<CustomJSONData::CustomNoteData>(noteData).value_or(nullptr);
-    if (customNoteData == nullptr) return nullptr;
+    auto* customNoteData = il2cpp_utils::cast<CustomJSONData::CustomNoteData>(noteData);
     auto& ad = TracksAD::getAD(customNoteData->customData);
     if (ad.tracks.empty()) return nullptr;
     for (auto& info : _assignedPrefabs) {
@@ -1708,7 +1707,6 @@ private:
     auto* spawned = UnityEngine::Object::Instantiate(prefab);
     CleanCustomObject(spawned);
     UnityEngine::Transform* noteTransform = noteController->____noteTransform;
-    if (noteTransform == nullptr) return;
     spawned->get_transform()->SetParent(noteTransform, false);
     auto renderers = noteController->get_gameObject()->GetComponentsInChildren<UnityEngine::Renderer*>(true);
     for (int i = 0; i < renderers.size(); i++) {
@@ -1755,7 +1753,10 @@ MAKE_HOOK_MATCH(SaberModelController_Init, &GlobalNamespace::SaberModelControlle
 MAKE_HOOK_MATCH(GameNoteController_Init, &GlobalNamespace::GameNoteController::Init, void, GlobalNamespace::GameNoteController* self, GlobalNamespace::NoteData* noteData, ByRef<GlobalNamespace::NoteSpawnData> noteSpawnData, GlobalNamespace::NoteVisualModifierType noteVisualModifierType, float cutAngleTolerance, float uniformScale) {
   GameNoteController_Init(self, noteData, noteSpawnData, noteVisualModifierType, cutAngleTolerance, uniformScale);
   if (Runtime::Instance().GetCurrentBeatmapData() == nullptr || Runtime::Instance().IsResetting()) return;
-  auto* info = Runtime::Instance().FindAssignedPrefab("colorNotes", noteData);
+  auto* info = Runtime::Instance().FindAssignedPrefab(noteData->get_gameplayType() == GlobalNamespace::NoteData_GameplayType::Normal ? "colorNotes" : "saber", noteData);
+  if (info == nullptr && noteData->get_gameplayType() == GlobalNamespace::NoteData_GameplayType::Normal) {
+     info = Runtime::Instance().FindAssignedPrefab("colorNotes", noteData);
+  }
   if (info) Runtime::Instance().ReplaceNoteVisuals(self, info);
 }
 MAKE_HOOK_MATCH(BombNoteController_Init, &GlobalNamespace::BombNoteController::Init, void, GlobalNamespace::BombNoteController* self, GlobalNamespace::NoteData* noteData, ByRef<GlobalNamespace::NoteSpawnData> noteSpawnData) {
