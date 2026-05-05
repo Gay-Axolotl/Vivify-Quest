@@ -1787,20 +1787,21 @@ void CameraApplier::OnRenderImage(UnityEngine::RenderTexture* src, UnityEngine::
 void FindAssignedPrefab(void* prefab)
 {
     try {
-        auto assignedPrefab = try_cast<PrefabType>(prefab);
+        auto assignedPrefab = il2cpp_utils::try_cast<UnityEngine::GameObject>(prefab);
         // things
     } catch (const std::exception& e) {
         std::cerr << "Error casting prefab: " << e.what() << std::endl;
     }
 }
 
-void ReplaceNoteVisuals(NoteTransform* noteTransform)
+void ReplaceNoteVisuals(UnityEngine::Transform* noteTransform)
 {
     if (noteTransform == nullptr) {
         std::cerr << "Error: noteTransform is null." << std::endl;
         return;
     }
     
+    /* placeholder loop over non-existent member
     for (auto& renderer : noteTransform->renderers) {
         if (renderer == nullptr) {
             std::cerr << "Warning: renderer is null, skipping..." << std::endl;
@@ -1808,15 +1809,17 @@ void ReplaceNoteVisuals(NoteTransform* noteTransform)
         }
         // i hate crashes
     }
+    */
 }
 
-void ReplaceSaberVisuals(SaberType* saber)
+void ReplaceSaberVisuals(GlobalNamespace::Saber* saber)
 {
     if (saber == nullptr) {
         std::cerr << "Error: saber is null." << std::endl;
         return;
     }
     
+    /* placeholder loop over non-existent member
     for (auto& element : saber->elements) {
         if (element == nullptr) {
             std::cerr << "Warning: element is null, skipping..." << std::endl;
@@ -1824,5 +1827,6 @@ void ReplaceSaberVisuals(SaberType* saber)
         }
         // mango mango mango mustarrdd
     }
+    */
 }
 }
