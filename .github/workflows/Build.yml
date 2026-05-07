@@ -34,6 +34,12 @@ jobs:
           resolve_ndk: true
           cache: true
 
+      - name: Delete lock file to force fresh resolve
+        run: rm -f qpm.shared.json
+
+      - name: QPM restore (unlocked)
+        run: qpm restore
+
       - name: QPM collapse
         run: qpm collapse
 
