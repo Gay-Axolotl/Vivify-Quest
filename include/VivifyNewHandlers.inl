@@ -366,6 +366,12 @@ void HandleAssignObjectPrefab(CustomJSONData::CustomEventData*, rapidjson::Value
     info.asset = assetStr;
     info.tracks = std::move(tracks);
     info.objectType = std::string(objType);
+    // "arrow": true lets the mapper opt-in to keeping the original note arrow
+    // visible when the custom prefab does not supply its own arrow mesh.
+    auto arrowIt = objVal->FindMember("arrow");
+    if (arrowIt != objVal->MemberEnd() && arrowIt->value.IsBool()) {
+      info.showArrow = arrowIt->value.GetBool();
+    }
     _assignedPrefabs.push_back(std::move(info));
   }
 }
