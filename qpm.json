@@ -128,7 +128,7 @@
     },
     {
       "id": "web-utils",
-      "versionRange": "^1.1.2",
+      "versionRange": "^0.6.7",
       "additionalData": {}
     }
   ]
