@@ -780,10 +780,11 @@ private:
     }
   }
   void WarnUnsupportedEventOnce(std::string_view key) {
-    if (_unsupportedEventWarnings.contains(key)) {
+    std::string keyStr(key);
+    if (_unsupportedEventWarnings.count(keyStr)) {
       return;
     }
-    _unsupportedEventWarnings.emplace(key);
+    _unsupportedEventWarnings.emplace(keyStr);
   }
   CustomJSONData::CustomBeatmapData* GetCustomBeatmapData(GlobalNamespace::BeatmapCallbacksController* callbackController) {
     return il2cpp_utils::try_cast<CustomJSONData::CustomBeatmapData>(callbackController->_beatmapData).value_or(nullptr);
