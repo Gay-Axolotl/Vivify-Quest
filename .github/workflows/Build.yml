@@ -26,18 +26,18 @@ jobs:
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
-      - name: QPM restore & NDK setup
+      - name: Delete lock file before QPM runs
+        run: rm -f qpm.shared.json
+
+      - name: QPM install & NDK setup
         uses: Fernthedev/qpm-action@v1
         with:
           workflow_token: ${{ secrets.GITHUB_TOKEN }}
-          restore: true
+          restore: false
           resolve_ndk: true
           cache: true
 
-      - name: Delete lock file to force fresh resolve
-        run: rm -f qpm.shared.json
-
-      - name: QPM restore (unlocked)
+      - name: QPM restore (fresh, no lock file)
         run: qpm restore
 
       - name: QPM collapse
