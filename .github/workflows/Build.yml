@@ -6,8 +6,6 @@ on:
     paths-ignore:
       - '**.md'
       - '.gitignore'
-      - '**.yml'
-      - '!.github/workflows/build.yml'
 
 env:
   module_id: vivify
@@ -43,24 +41,25 @@ jobs:
       - name: QPM collapse
         run: qpm collapse
 
-      - name: Build
+      - name: Configure CMake
         run: |
-          export ANDROID_NDK_HOME=$(qpm ndk resolve)
+          NDK_PATH=$(qpm ndk resolve)
           cmake -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=arm64-v8a \
             -DANDROID_PLATFORM=24 \
             -DANDROID_STL=c++_static \
             -DANDROID_USE_LEGACY_TOOLCHAIN_FILE=OFF \
-            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK_PATH/build/cmake/android.toolchain.cmake" \
             -B build .
-          cmake --build build --config Release
+
+      - name: Build
+        run: cmake --build build --config Release
 
       - name: Package QMOD
         run: |
-          cp mod.json build/mod.json
-          cd build
-          zip -r ../Vivify.qmod libvivify.so ../mod.json $(find ../extern/libs -name "*.so" 2>/dev/null)
+          DEP_LIBS=$(find extern/libs -name "*.so" 2>/dev/null | tr '\n' ' ')
+          zip -j Vivify.qmod build/libvivify.so mod.json $DEP_LIBS
 
       - name: Upload QMOD
         uses: actions/upload-artifact@v4
