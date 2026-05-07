@@ -1,0 +1,64 @@
+name: Build QMOD
+
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '**.yml'
+      - '!.github/workflows/build.yml'
+
+env:
+  module_id: vivify
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: QPM restore & NDK setup
+        uses: Fernthedev/qpm-action@v1
+        with:
+          workflow_token: ${{ secrets.GITHUB_TOKEN }}
+          restore: true
+          resolve_ndk: true
+          cache: true
+
+      - name: QPM collapse
+        run: qpm collapse
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cd ${{ github.workspace }}
+          ./scripts/build.ps1
+
+      - name: Create QMOD
+        shell: pwsh
+        run: |
+          cd ${{ github.workspace }}
+          ./scripts/createqmod.ps1
+
+      - name: Upload QMOD
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vivify.qmod
+          path: ./Vivify.qmod
+          if-no-files-found: error
+
+      - name: Upload .so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libvivify.so
+          path: ./build/libvivify.so
+          if-no-files-found: warn
