@@ -44,16 +44,23 @@ jobs:
         run: qpm collapse
 
       - name: Build
-        shell: pwsh
         run: |
-          cd ${{ github.workspace }}
-          ./scripts/build.ps1
+          export ANDROID_NDK_HOME=$(qpm ndk resolve)
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=24 \
+            -DANDROID_STL=c++_static \
+            -DANDROID_USE_LEGACY_TOOLCHAIN_FILE=OFF \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -B build .
+          cmake --build build --config Release
 
-      - name: Create QMOD
-        shell: pwsh
+      - name: Package QMOD
         run: |
-          cd ${{ github.workspace }}
-          ./scripts/createqmod.ps1
+          cp mod.json build/mod.json
+          cd build
+          zip -r ../Vivify.qmod libvivify.so ../mod.json $(find ../extern/libs -name "*.so" 2>/dev/null)
 
       - name: Upload QMOD
         uses: actions/upload-artifact@v4
