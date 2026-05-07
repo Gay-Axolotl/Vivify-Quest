@@ -1,0 +1,72 @@
+name: Build QMOD
+
+on:
+  workflow_dispatch:   # lets you trigger a build manually from the Actions tab
+  push:
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '**.yml'
+      - '!.github/workflows/build.yml'   # but DO run when THIS file changes
+
+env:
+  module_id: vivify
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+
+      # ── 2. Ninja (required by QPM's CMake build) ───────────────────────────
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      # ── 3. QPM — downloads deps, resolves NDK, runs restore ───────────────
+      - name: QPM restore & NDK setup
+        uses: Fernthedev/qpm-action@v1
+        with:
+          workflow_token: ${{ secrets.GITHUB_TOKEN }}
+          restore: true      # runs `qpm restore` (downloads extern headers + libs)
+          resolve_ndk: true  # auto-downloads the NDK version from qpm.json
+          cache: true        # caches deps between runs to save time
+
+      # ── 4. Collapse (flattens shared headers into extern/) ─────────────────
+      - name: QPM collapse
+        run: qpm collapse
+
+      # ── 5. Build .so via the PowerShell build script ───────────────────────
+      - name: Build
+        shell: pwsh
+        run: |
+          cd ${{ github.workspace }}
+          ./scripts/build.ps1
+
+      # ── 6. Package into a .qmod ────────────────────────────────────────────
+      - name: Create QMOD
+        shell: pwsh
+        run: |
+          cd ${{ github.workspace }}
+          ./scripts/createqmod.ps1
+
+      # ── 7. Upload the .qmod as a build artifact ────────────────────────────
+      - name: Upload QMOD
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vivify.qmod
+          path: ./Vivify.qmod
+          if-no-files-found: error
+
+      # ── 8. Also upload the raw .so (useful for debugging) ──────────────────
+      - name: Upload .so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libvivify.so
+          path: ./build/libvivify.so
+          if-no-files-found: warn
