@@ -35,7 +35,7 @@ jobs:
           workflow_token: ${{ secrets.GITHUB_TOKEN }}
           restore: false
           resolve_ndk: true
-          cache: true
+          cache: false
 
       - name: QPM restore (fresh, no lock file)
         run: qpm restore
