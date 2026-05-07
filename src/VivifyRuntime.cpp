@@ -228,7 +228,8 @@ struct AssignedPrefabInfo {
   std::string asset;
   std::vector<TrackW> tracks;
   std::string objectType;
-  std::optional<int> saberType; 
+  std::optional<int> saberType;
+  bool showArrow = false; // if true, preserve the original note arrow renderer
 };
 bool IsVivifyEvent(std::string_view type) {
   return type == kInstantiatePrefabEvent || type == kDestroyObjectEvent || type == kSetMaterialPropertyEvent ||
@@ -446,15 +447,42 @@ public:
     for (int i = 0; i < renderers.size(); i++) {
       auto* r = renderers[i];
       if (r->get_transform()->get_parent().ptr() == noteTransform || r->get_transform().ptr() == noteTransform) {
+        // When showArrow is true, preserve renderers on GameObjects named
+        // "NoteArrow" or "NoteArrowGlow" so the original directional arrow
+        // stays visible even though the note body has been replaced.
+        if (info->showArrow) {
+          auto name = r->get_gameObject()->get_name();
+          if (name == "NoteArrow" || name == "NoteArrowGlow") {
+            continue;
+          }
+        }
         r->set_enabled(false);
       }
     }
     auto* mpb = noteController->get_gameObject()->GetComponentInChildren<GlobalNamespace::MaterialPropertyBlockController*>();
     if (mpb != nullptr && UnityEngine::Object::op_Implicit_bool(mpb)) {
       auto newRenderers = spawned->GetComponentsInChildren<UnityEngine::Renderer*>(true);
-      auto convertedRenderers = ArrayW<UnityW<UnityEngine::Renderer>>(newRenderers.size());
+      // When showArrow is true, also include the original arrow renderers in
+      // the MPB so the colour block (saber colour) is applied to them correctly.
+      std::vector<UnityEngine::Renderer*> combined;
+      combined.reserve(newRenderers.size());
       for (int i = 0; i < newRenderers.size(); i++) {
-        convertedRenderers[i] = newRenderers[i];
+        combined.push_back(newRenderers[i]);
+      }
+      if (info->showArrow) {
+        auto origRenderers = noteController->get_gameObject()->GetComponentsInChildren<UnityEngine::Renderer*>(true);
+        for (int i = 0; i < origRenderers.size(); i++) {
+          auto* r = origRenderers[i];
+          if (!r->get_enabled()) continue; // already disabled = not an arrow we kept
+          auto name = r->get_gameObject()->get_name();
+          if (name == "NoteArrow" || name == "NoteArrowGlow") {
+            combined.push_back(r);
+          }
+        }
+      }
+      auto convertedRenderers = ArrayW<UnityW<UnityEngine::Renderer>>(combined.size());
+      for (size_t i = 0; i < combined.size(); i++) {
+        convertedRenderers[i] = combined[i];
       }
       mpb->____renderers = convertedRenderers;
       mpb->ApplyChanges();
