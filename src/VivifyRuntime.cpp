@@ -779,7 +779,7 @@ private:
       HandleAssignObjectPrefab(customEventData, *json);
     }
   }
-  void 
+  void WarnUnsupportedEventOnce(std::string_view key) {
     if (_unsupportedEventWarnings.contains(key)) {
       return;
     }
