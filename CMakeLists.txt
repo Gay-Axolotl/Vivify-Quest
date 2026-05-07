@@ -1,80 +1,32 @@
-cmake_minimum_required(VERSION 3.22)
+# YOU SHOULD NOT MANUALLY EDIT THIS FILE, QPM WILL VOID ALL CHANGES
+# always added
+target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes)
+target_include_directories(${COMPILE_ID} SYSTEM PRIVATE ${EXTERN_DIR}/includes/libil2cpp/il2cpp/libil2cpp)
 
-option(QUEST "Build for quest" ON)
+# includes and compile options added by other libraries
+target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes/bs-cordl/include)
+target_compile_options(${COMPILE_ID} PRIVATE -DNEED_UNSAFE_CSHARP)
+target_compile_options(${COMPILE_ID} PRIVATE -fdeclspec)
+target_compile_options(${COMPILE_ID} PRIVATE -DUNITY_2021)
+target_compile_options(${COMPILE_ID} PRIVATE -DHAS_CODEGEN)
+target_compile_options(${COMPILE_ID} PRIVATE -Wno-invalid-offsetof)
+target_include_directories(${COMPILE_ID} SYSTEM PRIVATE ${EXTERN_DIR}/includes/fmt/fmt/include/)
+target_compile_options(${COMPILE_ID} PRIVATE -DFMT_HEADER_ONLY)
+target_include_directories(${COMPILE_ID} SYSTEM PRIVATE ${EXTERN_DIR}/includes/libil2cpp/il2cpp/external/baselib/Include)
+target_include_directories(${COMPILE_ID} SYSTEM PRIVATE ${EXTERN_DIR}/includes/libil2cpp/il2cpp/external/baselib/Platforms/Android/Include)
+target_compile_options(${COMPILE_ID} PRIVATE -DRAPIDJSON_NEON)
+target_compile_options(${COMPILE_ID} PRIVATE -Wno-invalid-offsetof)
+target_include_directories(${COMPILE_ID} SYSTEM PRIVATE ${EXTERN_DIR}/includes/paper2_scotland2/shared/utfcpp/source)
+target_compile_options(${COMPILE_ID} PRIVATE -Wno-extra-qualification)
 
-# Globals
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED 20)
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+# libs dir -> stores .so or .a files (or symlinked!)
+target_link_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/libs)
+RECURSE_FILES(so_list ${EXTERN_DIR}/libs/*.so)
+RECURSE_FILES(a_list ${EXTERN_DIR}/libs/*.a)
 
-set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-add_compile_options(-frtti -fexceptions -fvisibility=hidden -fPIE -fPIC)
-
-# Include. Include order matters!
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/utils.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/qpm.cmake)
-
-if(${CMAKE_BUILD_TYPE} STREQUAL "RELEASE" OR ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo" OR ${CMAKE_BUILD_TYPE} STREQUAL "MinSizeRel")
-        # Better optimizations
-        add_compile_options(-O3)
-
-        # LTO
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-        add_compile_options(-flto)
-endif()
-
-if(${CMAKE_BUILD_TYPE} STREQUAL "DEBUG" OR ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
-        add_compile_options(-g)
-endif()
-
-# Targets
-if(QUEST)
-        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/targets/quest.cmake)
-endif()
-
-# Post build
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/strip.cmake)
-
-# stop symbols leaking
-# TODO: Fix
-# add_link_options(-Wl, --exclude-libs, ALL)
-project(vivify
-        VERSION ${PACKAGE_VERSION})
-
-add_compile_definitions(MOD_ID="${CMAKE_PROJECT_NAME}")
-add_compile_definitions(VERSION="${CMAKE_PROJECT_VERSION}")
-
-# Set COMPILE_ID for qpm purposes
-set(COMPILE_ID ${CMAKE_PROJECT_NAME})
-# Generate mod.json from template
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/mod.template.json"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mod.json"
-    @ONLY
+# every .so or .a that needs to be linked, put here!
+# I don't believe you need to specify if a lib is static or not, poggers!
+target_link_libraries(${COMPILE_ID} PRIVATE
+	${so_list}
+	${a_list}
 )
-# recursively get all src files
-RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
-RECURSE_FILES(c_file_list ${SOURCE_DIR}/*.c)
-
-add_library(
-        ${CMAKE_PROJECT_NAME}
-        SHARED
-        ${cpp_file_list}
-        ${c_file_list}
-)
-
-# for inline hook
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE -llog)
-
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${INCLUDE_DIR})
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${SHARED_DIR})
-
-# beatsaber hook inline hook
-
-RECURSE_FILES(src_inline_hook_beatsaber_hook_local_extra_c ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/*.c)
-RECURSE_FILES(src_inline_hook_beatsaber_hook_local_extra_cpp ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/*.cpp)
-
-target_sources(${COMPILE_ID} PRIVATE ${src_inline_hook_beatsaber_hook_local_extra_c})
-target_sources(${COMPILE_ID} PRIVATE ${src_inline_hook_beatsaber_hook_local_extra_cpp})
